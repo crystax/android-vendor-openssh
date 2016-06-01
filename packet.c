@@ -1065,7 +1065,7 @@ ssh_packet_need_rekeying(struct ssh *ssh, u_int outbound_packet_len)
 
 	/* Time-based rekeying */
 	if (state->rekey_interval != 0 &&
-	    state->rekey_time + state->rekey_interval <= monotime())
+	    state->rekey_time + (time_t)state->rekey_interval <= monotime())
 		return 1;
 
 	/* Always rekey when MAX_PACKETS sent in either direction */
