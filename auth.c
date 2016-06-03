@@ -494,6 +494,11 @@ auth_secure_path(const char *name, struct stat *stp, const char *pw_dir,
 		return -1;
 	}
 
+#if __ANDROID__
+	(void)cp;
+	(void)st;
+	(void)comparehome;
+#else /* !__ANDROID__ */
 	/* for each component of the canonical path, walking upwards */
 	for (;;) {
 		if ((cp = dirname(buf)) == NULL) {
@@ -521,6 +526,7 @@ auth_secure_path(const char *name, struct stat *stp, const char *pw_dir,
 		if ((strcmp("/", buf) == 0) || (strcmp(".", buf) == 0))
 			break;
 	}
+#endif /* !__ANDROID__ */
 	return 0;
 }
 
