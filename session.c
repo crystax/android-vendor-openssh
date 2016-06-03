@@ -1242,6 +1242,27 @@ do_setup_env(Session *s, const char *shell)
 	if (getenv("TZ"))
 		child_set_env(&env, &envsize, "TZ", getenv("TZ"));
 
+#if __ANDROID__
+#define ADD_ANDROID_ENVVAR(var) \
+	if (getenv(var)) child_set_env(&env, &envsize, var, getenv(var))
+
+	ADD_ANDROID_ENVVAR("ANDROID_ASSETS");
+	ADD_ANDROID_ENVVAR("ANDROID_BOOTLOGO");
+	ADD_ANDROID_ENVVAR("ANDROID_DATA");
+	ADD_ANDROID_ENVVAR("ANDROID_PROPERTY_WORKSPACE");
+	ADD_ANDROID_ENVVAR("ANDROID_ROOT");
+	ADD_ANDROID_ENVVAR("ANDROID_STORAGE");
+	ADD_ANDROID_ENVVAR("ASEC_MOUNTPOINT");
+	ADD_ANDROID_ENVVAR("BOOTCLASSPATH");
+	ADD_ANDROID_ENVVAR("ENC_EMULATED_STORAGE_TARGET");
+	ADD_ANDROID_ENVVAR("EXTERNAL_STORAGE");
+	ADD_ANDROID_ENVVAR("HOSTNAME");
+	ADD_ANDROID_ENVVAR("SYSTEMSERVERCLASSPATH");
+	ADD_ANDROID_ENVVAR("TMPDIR");
+
+#undef ADD_ANDROID_ENVVAR
+#endif /* __ANDROID__ */
+
 	/* Set custom environment options from RSA authentication. */
 	if (!options.use_login) {
 		while (custom_environment) {
