@@ -286,8 +286,7 @@ distprep: catman-do
 	$(AUTORECONF)
 	-rm -rf autom4te.cache
 
-install: $(CONFIGFILES) $(MANPAGES) $(TARGETS) install-files install-sysconf
-#install: host-key check-config
+install: $(CONFIGFILES) $(MANPAGES) $(TARGETS) install-files install-sysconf host-key check-config
 install-nokeys: $(CONFIGFILES) $(MANPAGES) $(TARGETS) install-files install-sysconf
 install-nosysconf: $(CONFIGFILES) $(MANPAGES) $(TARGETS) install-files
 

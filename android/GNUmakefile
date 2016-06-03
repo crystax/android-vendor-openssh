@@ -75,9 +75,10 @@ build:
 			--disable-pututline \
 			--disable-pututxline \
 			--without-rpath \
+			--with-default-path=/sbin:/vendor/bin:/system/sbin:/system/bin:/system/xbin \
 			--with-privsep-path=$(call install-dir,$(ABI))/var/empty \
 			&& \
 		make -j && \
-		make install && \
+		make install-nokeys && \
 		true \
 	)
