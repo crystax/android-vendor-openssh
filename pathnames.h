@@ -12,15 +12,29 @@
  * called by a name other than "ssh" or "Secure Shell".
  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void openssh_path_set_rootdir(const char *path);
+
 #define ETCDIR				"/etc"
 
 #ifndef SSHDIR
 #define SSHDIR				ETCDIR "/ssh"
 #endif
 
+#undef SSHDIR
+#define SSHDIR openssh_path_etcdir()
+char *openssh_path_etcdir();
+
 #ifndef _PATH_SSH_PIDDIR
 #define _PATH_SSH_PIDDIR		"/var/run"
 #endif
+
+#undef _PATH_SSH_PIDDIR
+#define _PATH_SSH_PIDDIR openssh_path_piddir()
+char *openssh_path_piddir();
 
 /*
  * System-wide file containing host keys of known hosts.  This file should be
@@ -30,30 +44,79 @@
 /* backward compat for protocol 2 */
 #define _PATH_SSH_SYSTEM_HOSTFILE2	SSHDIR "/ssh_known_hosts2"
 
+#undef _PATH_SSH_SYSTEM_HOSTFILE
+#undef _PATH_SSH_SYSTEM_HOSTFILE2
+#define _PATH_SSH_SYSTEM_HOSTFILE  openssh_path_system_hostfile()
+#define _PATH_SSH_SYSTEM_HOSTFILE2 openssh_path_system_hostfile2()
+char *openssh_path_system_hostfile();
+char *openssh_path_system_hostfile2();
+
 /*
  * Of these, ssh_host_key must be readable only by root, whereas ssh_config
  * should be world-readable.
  */
 #define _PATH_SERVER_CONFIG_FILE	SSHDIR "/sshd_config"
+#undef  _PATH_SERVER_CONFIG_FILE
+#define _PATH_SERVER_CONFIG_FILE openssh_path_server_config_file()
+char *openssh_path_server_config_file();
+
 #define _PATH_HOST_CONFIG_FILE		SSHDIR "/ssh_config"
+#undef  _PATH_HOST_CONFIG_FILE
+#define _PATH_HOST_CONFIG_FILE openssh_path_host_config_file()
+char *openssh_path_host_config_file();
+
 #define _PATH_HOST_KEY_FILE		SSHDIR "/ssh_host_key"
+#undef  _PATH_HOST_KEY_FILE
+#define _PATH_HOST_KEY_FILE openssh_path_host_key_file()
+char *openssh_path_host_key_file();
+
 #define _PATH_HOST_DSA_KEY_FILE		SSHDIR "/ssh_host_dsa_key"
+#undef  _PATH_HOST_DSA_KEY_FILE
+#define _PATH_HOST_DSA_KEY_FILE openssh_path_host_dsa_key_file()
+char *openssh_path_host_dsa_key_file();
+
 #define _PATH_HOST_ECDSA_KEY_FILE	SSHDIR "/ssh_host_ecdsa_key"
+#undef  _PATH_HOST_ECDSA_KEY_FILE
+#define _PATH_HOST_ECDSA_KEY_FILE openssh_path_host_ecdsa_key_file()
+char *openssh_path_host_ecdsa_key_file();
+
 #define _PATH_HOST_ED25519_KEY_FILE	SSHDIR "/ssh_host_ed25519_key"
+#undef  _PATH_HOST_ED25519_KEY_FILE
+#define _PATH_HOST_ED25519_KEY_FILE openssh_path_host_ed25519_key_file()
+char *openssh_path_host_ed25519_key_file();
+
 #define _PATH_HOST_RSA_KEY_FILE		SSHDIR "/ssh_host_rsa_key"
+#undef  _PATH_HOST_RSA_KEY_FILE
+#define _PATH_HOST_RSA_KEY_FILE openssh_path_host_rsa_key_file()
+char *openssh_path_host_rsa_key_file();
+
 #define _PATH_DH_MODULI			SSHDIR "/moduli"
+#undef  _PATH_DH_MODULI
+#define _PATH_DH_MODULI openssh_path_dh_moduli()
+char *openssh_path_dh_moduli();
+
 /* Backwards compatibility */
 #define _PATH_DH_PRIMES			SSHDIR "/primes"
+#undef  _PATH_DH_PRIMES
+#define _PATH_DH_PRIMES openssh_path_dh_primes()
+char *openssh_path_dh_primes();
 
 #ifndef _PATH_SSH_PROGRAM
 #define _PATH_SSH_PROGRAM		"/usr/bin/ssh"
 #endif
+
+#undef  _PATH_SSH_PROGRAM
+#define _PATH_SSH_PROGRAM openssh_path_ssh_program()
+char *openssh_path_ssh_program();
 
 /*
  * The process id of the daemon listening for connections is saved here to
  * make it easier to kill the correct daemon when necessary.
  */
 #define _PATH_SSH_DAEMON_PID_FILE	_PATH_SSH_PIDDIR "/sshd.pid"
+#undef  _PATH_SSH_DAEMON_PID_FILE
+#define _PATH_SSH_DAEMON_PID_FILE openssh_path_ssh_daemon_pid_file()
+char *openssh_path_ssh_daemon_pid_file();
 
 /*
  * The directory in user's home directory in which the files reside. The
@@ -109,12 +172,19 @@
  */
 #define _PATH_SSH_USER_RC		_PATH_SSH_USER_DIR "/rc"
 #define _PATH_SSH_SYSTEM_RC		SSHDIR "/sshrc"
+#undef  _PATH_SSH_SYSTEM_RC
+#define _PATH_SSH_SYSTEM_RC openssh_path_system_rc()
+char *openssh_path_system_rc();
 
 /*
  * Ssh-only version of /etc/hosts.equiv.  Additionally, the daemon may use
  * ~/.rhosts and /etc/hosts.equiv if rhosts authentication is enabled.
  */
 #define _PATH_SSH_HOSTS_EQUIV		SSHDIR "/shosts.equiv"
+#undef  _PATH_SSH_HOSTS_EQUIV
+#define _PATH_SSH_HOSTS_EQUIV openssh_path_hosts_equiv()
+char *openssh_path_hosts_equiv();
+
 #define _PATH_RHOSTS_EQUIV		"/etc/hosts.equiv"
 
 /*
@@ -129,10 +199,18 @@
 #define _PATH_SSH_KEY_SIGN		"/usr/libexec/ssh-keysign"
 #endif
 
+#undef  _PATH_SSH_KEY_SIGN
+#define _PATH_SSH_KEY_SIGN openssh_path_key_sign()
+char *openssh_path_key_sign();
+
 /* Location of ssh-pkcs11-helper to support keys in tokens */
 #ifndef _PATH_SSH_PKCS11_HELPER
 #define _PATH_SSH_PKCS11_HELPER		"/usr/libexec/ssh-pkcs11-helper"
 #endif
+
+#undef  _PATH_SSH_PKCS11_HELPER
+#define _PATH_SSH_PKCS11_HELPER openssh_path_pkcs11_helper()
+char *openssh_path_pkcs11_helper();
 
 /* xauth for X11 forwarding */
 #ifndef _PATH_XAUTH
@@ -154,10 +232,18 @@
 #define _PATH_SFTP_SERVER		"/usr/libexec/sftp-server"
 #endif
 
+#undef  _PATH_SFTP_SERVER
+#define _PATH_SFTP_SERVER openssh_path_sftp_server()
+char *openssh_path_sftp_server();
+
 /* chroot directory for unprivileged user when UsePrivilegeSeparation=yes */
 #ifndef _PATH_PRIVSEP_CHROOT_DIR
 #define _PATH_PRIVSEP_CHROOT_DIR	"/var/empty"
 #endif
+
+#undef  _PATH_PRIVSEP_CHROOT_DIR
+#define _PATH_PRIVSEP_CHROOT_DIR openssh_path_privsep_chroot_dir()
+char *openssh_path_privsep_chroot_dir();
 
 /* for passwd change */
 #ifndef _PATH_PASSWD_PROG
@@ -181,3 +267,7 @@
 #ifndef ASKPASS_PROGRAM
 #define ASKPASS_PROGRAM         "/usr/lib/ssh/ssh-askpass"
 #endif /* ASKPASS_PROGRAM */
+
+#ifdef __cplusplus
+} // extern "C"
+#endif

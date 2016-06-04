@@ -141,7 +141,7 @@ extern char *__progname;
 ServerOptions options;
 
 /* Name of the server configuration file. */
-char *config_file_name = _PATH_SERVER_CONFIG_FILE;
+const char *config_file_name = NULL;
 
 /*
  * Debug mode flag.  This can be set on the command line.  If debug
@@ -1015,7 +1015,7 @@ usage(void)
 "usage: sshd [-46DdeiqTt] [-b bits] [-C connection_spec] [-c host_cert_file]\n"
 "            [-E log_file] [-f config_file] [-g login_grace_time]\n"
 "            [-h host_key_file] [-k key_gen_time] [-o option] [-p port]\n"
-"            [-u len]\n"
+"            [-u len] [-x rootdir]\n"
 	);
 	exit(1);
 }
@@ -1508,7 +1508,7 @@ main(int ac, char **av)
 
 	/* Parse command-line arguments. */
 	while ((opt = getopt(ac, av,
-	    "C:E:b:c:f:g:h:k:o:p:u:46DQRTdeiqrt")) != -1) {
+	    "C:E:b:c:f:x:g:h:k:o:p:u:46DQRTdeiqrt")) != -1) {
 		switch (opt) {
 		case '4':
 			options.address_family = AF_INET;
@@ -1518,6 +1518,10 @@ main(int ac, char **av)
 			break;
 		case 'f':
 			config_file_name = optarg;
+			break;
+		case 'x':
+			options.root_dir = derelativise_path(optarg);
+			openssh_path_set_rootdir(options.root_dir);
 			break;
 		case 'c':
 			if (options.num_host_cert_files >= MAX_HOSTCERTS) {
@@ -1634,6 +1638,9 @@ main(int ac, char **av)
 		closefrom(REEXEC_MIN_FREE_FD);
 	else
 		closefrom(REEXEC_DEVCRYPTO_RESERVED_FD);
+
+	if (!config_file_name)
+		config_file_name = _PATH_SERVER_CONFIG_FILE;
 
 #ifdef WITH_OPENSSL
 	OpenSSL_add_all_algorithms();

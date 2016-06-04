@@ -146,7 +146,7 @@ int showprogress = 1;
 int throughlocal = 0;
 
 /* This is the program to execute for the secured connection. ("ssh" or -S) */
-char *ssh_program = _PATH_SSH_PROGRAM;
+char *ssh_program = NULL;
 
 /* This is used to store the pid of ssh_program */
 pid_t do_cmd_pid = -1;
@@ -385,6 +385,8 @@ main(int argc, char **argv)
 	argv = newargv;
 
 	__progname = ssh_get_progname(argv[0]);
+
+	ssh_program = _PATH_SSH_PROGRAM;
 
 	memset(&args, '\0', sizeof(args));
 	memset(&remote_remote_args, '\0', sizeof(remote_remote_args));

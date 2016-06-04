@@ -1381,6 +1381,8 @@ do_rc_files(Session *s, const char *shell)
 	char cmd[1024];
 	int do_xauth;
 	struct stat st;
+	char popenbuf[PATH_MAX];
+	int popenbufrc;
 
 	do_xauth =
 	    s->display != NULL && s->auth_proto != NULL && s->auth_data != NULL;
@@ -1406,7 +1408,12 @@ do_rc_files(Session *s, const char *shell)
 		if (debug_flag)
 			fprintf(stderr, "Running %s %s\n", _PATH_BSHELL,
 			    _PATH_SSH_SYSTEM_RC);
-		f = popen(_PATH_BSHELL " " _PATH_SSH_SYSTEM_RC, "w");
+		popenbufrc = snprintf(popenbuf, sizeof(popenbuf), "%s %s", _PATH_BSHELL, _PATH_SSH_SYSTEM_RC);
+		if (popenbufrc < 0 || (size_t)popenbufrc >= sizeof(popenbuf)) {
+			fprintf(stderr, "*** FATAL: Can't prepare command name for popen: buffer too small\n");
+			abort();
+		}
+		f = popen(popenbuf, "w");
 		if (f) {
 			if (do_xauth)
 				fprintf(f, "%s %s\n", s->auth_proto,

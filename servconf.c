@@ -76,6 +76,7 @@ initialize_server_options(ServerOptions *options)
 	options->use_pam = -1;
 
 	/* Standard Options */
+	options->root_dir = NULL;
 	options->num_ports = 0;
 	options->ports_from_cmdline = 0;
 	options->queued_listen_addrs = NULL;
@@ -367,6 +368,7 @@ fill_default_server_options(ServerOptions *options)
 			v = NULL; \
 		} \
 	} while(0)
+	CLEAR_ON_NONE(options->root_dir);
 	CLEAR_ON_NONE(options->pid_file);
 	CLEAR_ON_NONE(options->xauth_location);
 	CLEAR_ON_NONE(options->banner);
@@ -430,6 +432,7 @@ typedef enum {
 	sAuthenticationMethods, sHostKeyAgent, sPermitUserRC,
 	sStreamLocalBindMask, sStreamLocalBindUnlink,
 	sAllowStreamLocalForwarding, sFingerprintHash,
+	sRootDir,
 	sDeprecated, sUnsupported
 } ServerOpCodes;
 
@@ -572,6 +575,7 @@ static struct {
 	{ "streamlocalbindunlink", sStreamLocalBindUnlink, SSHCFG_ALL },
 	{ "allowstreamlocalforwarding", sAllowStreamLocalForwarding, SSHCFG_ALL },
 	{ "fingerprinthash", sFingerprintHash, SSHCFG_GLOBAL },
+	{ "rootdir", sRootDir, SSHCFG_GLOBAL },
 	{ NULL, sBadOption, 0 }
 };
 
@@ -1150,6 +1154,10 @@ process_server_config_line(ServerOptions *options, char *line,
 
 	case sPidFile:
 		charptr = &options->pid_file;
+		goto parse_filename;
+
+	case sRootDir:
+		charptr = &options->root_dir;
 		goto parse_filename;
 
 	case sPermitRootLogin:

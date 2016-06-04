@@ -21,7 +21,6 @@ top_srcdir=@top_srcdir@
 
 DESTDIR=
 VPATH=@srcdir@
-SSH_PROGRAM=@bindir@/ssh
 ASKPASS_PROGRAM=$(libexecdir)/ssh-askpass
 SFTP_SERVER=$(libexecdir)/sftp-server
 SSH_KEYSIGN=$(libexecdir)/ssh-keysign
@@ -31,14 +30,16 @@ SSH_PRIVSEP_USER=@SSH_PRIVSEP_USER@
 STRIP_OPT=@STRIP_OPT@
 TEST_SHELL=@TEST_SHELL@
 
-PATHS= -DSSHDIR=\"$(sysconfdir)\" \
-	-D_PATH_SSH_PROGRAM=\"$(SSH_PROGRAM)\" \
+PATHS= -D_CONFIGURED_ROOT_DIR=\"$(prefix)\" \
+	-D_CONFIGURED_SSHDIR=\"$(sysconfdir)\" \
+	-D_CONFIGURED_BINDIR=\"$(bindir)\" \
+	-D_CONFIGURED_LIBEXECDIR=\"$(libexecdir)\" \
 	-D_PATH_SSH_ASKPASS_DEFAULT=\"$(ASKPASS_PROGRAM)\" \
 	-D_PATH_SFTP_SERVER=\"$(SFTP_SERVER)\" \
 	-D_PATH_SSH_KEY_SIGN=\"$(SSH_KEYSIGN)\" \
 	-D_PATH_SSH_PKCS11_HELPER=\"$(SSH_PKCS11_HELPER)\" \
-	-D_PATH_SSH_PIDDIR=\"$(piddir)\" \
-	-D_PATH_PRIVSEP_CHROOT_DIR=\"$(PRIVSEP_PATH)\"
+	-D_CONFIGURED_PATH_SSH_PIDDIR=\"$(piddir)\" \
+	-D_CONFIGURED_PATH_PRIVSEP_CHROOT_DIR=\"$(PRIVSEP_PATH)\"
 
 CC=@CC@
 LD=@LD@
@@ -92,7 +93,8 @@ LIBSSH_OBJS=${LIBOPENSSH_OBJS} \
 	kex.o kexdh.o kexgex.o kexecdh.o kexc25519.o \
 	kexdhc.o kexgexc.o kexecdhc.o kexc25519c.o \
 	kexdhs.o kexgexs.o kexecdhs.o kexc25519s.o \
-	platform-pledge.o
+	platform-pledge.o \
+	pathnames.o
 
 SSHOBJS= ssh.o readconf.o clientloop.o sshtty.o \
 	sshconnect.o sshconnect1.o sshconnect2.o mux.o
