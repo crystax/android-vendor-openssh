@@ -37,6 +37,8 @@
 #include <stdarg.h>
 #include <stdlib.h>
 
+#include <getrrsetbyname.h>
+
 #include "xmalloc.h"
 #include "sshkey.h"
 #include "ssherr.h"
