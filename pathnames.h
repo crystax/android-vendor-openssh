@@ -1,4 +1,4 @@
-/* $OpenBSD: pathnames.h,v 1.24 2013/12/06 13:39:49 markus Exp $ */
+/* $OpenBSD: pathnames.h,v 1.28 2018/02/23 15:58:37 markus Exp $ */
 
 /*
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
@@ -85,6 +85,11 @@ char *openssh_path_host_ecdsa_key_file();
 #define _PATH_HOST_ED25519_KEY_FILE openssh_path_host_ed25519_key_file()
 char *openssh_path_host_ed25519_key_file();
 
+#define _PATH_HOST_XMSS_KEY_FILE	SSHDIR "/ssh_host_xmss_key"
+#undef  _PATH_HOST_XMSS_KEY_FILE
+#define _PATH_HOST_XMSS_KEY_FILE openssh_path_host_xmss_key_file()
+char *openssh_path_host_xmss_key_file();
+
 #define _PATH_HOST_RSA_KEY_FILE		SSHDIR "/ssh_host_rsa_key"
 #undef  _PATH_HOST_RSA_KEY_FILE
 #define _PATH_HOST_RSA_KEY_FILE openssh_path_host_rsa_key_file()
@@ -137,11 +142,11 @@ char *openssh_path_ssh_daemon_pid_file();
  * Name of the default file containing client-side authentication key. This
  * file should only be readable by the user him/herself.
  */
-#define _PATH_SSH_CLIENT_IDENTITY	_PATH_SSH_USER_DIR "/identity"
 #define _PATH_SSH_CLIENT_ID_DSA		_PATH_SSH_USER_DIR "/id_dsa"
 #define _PATH_SSH_CLIENT_ID_ECDSA	_PATH_SSH_USER_DIR "/id_ecdsa"
 #define _PATH_SSH_CLIENT_ID_RSA		_PATH_SSH_USER_DIR "/id_rsa"
 #define _PATH_SSH_CLIENT_ID_ED25519	_PATH_SSH_USER_DIR "/id_ed25519"
+#define _PATH_SSH_CLIENT_ID_XMSS	_PATH_SSH_USER_DIR "/id_xmss"
 
 /*
  * Configuration file in user's home directory.  This file need not be
@@ -253,15 +258,6 @@ char *openssh_path_privsep_chroot_dir();
 #ifndef _PATH_LS
 #define _PATH_LS			"ls"
 #endif
-
-/* path to login program */
-#ifndef LOGIN_PROGRAM
-# ifdef LOGIN_PROGRAM_FALLBACK
-#  define LOGIN_PROGRAM         LOGIN_PROGRAM_FALLBACK
-# else
-#  define LOGIN_PROGRAM         "/usr/bin/login"
-# endif
-#endif /* LOGIN_PROGRAM */
 
 /* Askpass program define */
 #ifndef ASKPASS_PROGRAM

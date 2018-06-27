@@ -1,4 +1,4 @@
-/* $OpenBSD: authfile.c,v 1.120 2015/12/11 04:21:11 mmcc Exp $ */
+/* $OpenBSD: authfile.c,v 1.128 2018/02/23 15:58:37 markus Exp $ */
 /*
  * Copyright (c) 2000, 2013 Markus Friedl.  All rights reserved.
  *
@@ -42,7 +42,6 @@
 #include "ssh.h"
 #include "log.h"
 #include "authfile.h"
-#include "rsa.h"
 #include "misc.h"
 #include "atomicio.h"
 #include "sshkey.h"
@@ -135,34 +134,6 @@ sshkey_load_file(int fd, struct sshbuf *blob)
 	return r;
 }
 
-#ifdef WITH_SSH1
-/*
- * Loads the public part of the ssh v1 key file.  Returns NULL if an error was
- * encountered (the file does not exist or is not readable), and the key
- * otherwise.
- */
-static int
-sshkey_load_public_rsa1(int fd, struct sshkey **keyp, char **commentp)
-{
-	struct sshbuf *b = NULL;
-	int r;
-
-	*keyp = NULL;
-	if (commentp != NULL)
-		*commentp = NULL;
-
-	if ((b = sshbuf_new()) == NULL)
-		return SSH_ERR_ALLOC_FAIL;
-	if ((r = sshkey_load_file(fd, b)) != 0)
-		goto out;
-	if ((r = sshkey_parse_public_rsa1_fileblob(b, keyp, commentp)) != 0)
-		goto out;
-	r = 0;
- out:
-	sshbuf_free(b);
-	return r;
-}
-#endif /* WITH_SSH1 */
 
 /* XXX remove error() calls from here? */
 int
@@ -200,7 +171,8 @@ sshkey_load_private_type(int type, const char *filename, const char *passphrase,
 {
 	int fd, r;
 
-	*keyp = NULL;
+	if (keyp != NULL)
+		*keyp = NULL;
 	if (commentp != NULL)
 		*commentp = NULL;
 
@@ -219,6 +191,8 @@ sshkey_load_private_type(int type, const char *filename, const char *passphrase,
 		*perm_ok = 1;
 
 	r = sshkey_load_private_type_fd(fd, type, passphrase, keyp, commentp);
+	if (r == 0 && keyp && *keyp)
+		r = sshkey_set_filename(*keyp, filename);
  out:
 	close(fd);
 	return r;
@@ -231,6 +205,8 @@ sshkey_load_private_type_fd(int fd, int type, const char *passphrase,
 	struct sshbuf *buffer = NULL;
 	int r;
 
+	if (keyp != NULL)
+		*keyp = NULL;
 	if ((buffer = sshbuf_new()) == NULL) {
 		r = SSH_ERR_ALLOC_FAIL;
 		goto out;
@@ -255,7 +231,8 @@ sshkey_load_private(const char *filename, const char *passphrase,
 	struct sshbuf *buffer = NULL;
 	int r, fd;
 
-	*keyp = NULL;
+	if (keyp != NULL)
+		*keyp = NULL;
 	if (commentp != NULL)
 		*commentp = NULL;
 
@@ -273,6 +250,9 @@ sshkey_load_private(const char *filename, const char *passphrase,
 	if ((r = sshkey_load_file(fd, buffer)) != 0 ||
 	    (r = sshkey_parse_private_fileblob(buffer, passphrase, keyp,
 	    commentp)) != 0)
+		goto out;
+	if (keyp && *keyp &&
+	    (r = sshkey_set_filename(*keyp, filename)) != 0)
 		goto out;
 	r = 0;
  out:
@@ -328,75 +308,48 @@ sshkey_try_load_public(struct sshkey *k, const char *filename, char **commentp)
 	return SSH_ERR_INVALID_FORMAT;
 }
 
-/* load public key from ssh v1 private or any pubkey file */
+/* load public key from any pubkey file */
 int
 sshkey_load_public(const char *filename, struct sshkey **keyp, char **commentp)
 {
 	struct sshkey *pub = NULL;
-	char file[PATH_MAX];
-	int r, fd;
+	char *file = NULL;
+	int r;
 
 	if (keyp != NULL)
 		*keyp = NULL;
 	if (commentp != NULL)
 		*commentp = NULL;
 
-	/* XXX should load file once and attempt to parse each format */
-
-	if ((fd = open(filename, O_RDONLY)) < 0)
-		goto skip;
-#ifdef WITH_SSH1
-	/* try rsa1 private key */
-	r = sshkey_load_public_rsa1(fd, keyp, commentp);
-	close(fd);
-	switch (r) {
-	case SSH_ERR_INTERNAL_ERROR:
-	case SSH_ERR_ALLOC_FAIL:
-	case SSH_ERR_INVALID_ARGUMENT:
-	case SSH_ERR_SYSTEM_ERROR:
-	case 0:
-		return r;
-	}
-#else /* WITH_SSH1 */
-	close(fd);
-#endif /* WITH_SSH1 */
-
-	/* try ssh2 public key */
 	if ((pub = sshkey_new(KEY_UNSPEC)) == NULL)
 		return SSH_ERR_ALLOC_FAIL;
 	if ((r = sshkey_try_load_public(pub, filename, commentp)) == 0) {
-		if (keyp != NULL)
+		if (keyp != NULL) {
 			*keyp = pub;
-		return 0;
+			pub = NULL;
+		}
+		r = 0;
+		goto out;
 	}
 	sshkey_free(pub);
 
-#ifdef WITH_SSH1
-	/* try rsa1 public key */
-	if ((pub = sshkey_new(KEY_RSA1)) == NULL)
-		return SSH_ERR_ALLOC_FAIL;
-	if ((r = sshkey_try_load_public(pub, filename, commentp)) == 0) {
-		if (keyp != NULL)
-			*keyp = pub;
-		return 0;
-	}
-	sshkey_free(pub);
-#endif /* WITH_SSH1 */
-
- skip:
 	/* try .pub suffix */
-	if ((pub = sshkey_new(KEY_UNSPEC)) == NULL)
+	if (asprintf(&file, "%s.pub", filename) == -1)
 		return SSH_ERR_ALLOC_FAIL;
-	r = SSH_ERR_ALLOC_FAIL;	/* in case strlcpy or strlcat fail */
-	if ((strlcpy(file, filename, sizeof file) < sizeof(file)) &&
-	    (strlcat(file, ".pub", sizeof file) < sizeof(file)) &&
-	    (r = sshkey_try_load_public(pub, file, commentp)) == 0) {
-		if (keyp != NULL)
-			*keyp = pub;
-		return 0;
+	if ((pub = sshkey_new(KEY_UNSPEC)) == NULL) {
+		r = SSH_ERR_ALLOC_FAIL;
+		goto out;
 	}
+	if ((r = sshkey_try_load_public(pub, file, commentp)) == 0) {
+		if (keyp != NULL) {
+			*keyp = pub;
+			pub = NULL;
+		}
+		r = 0;
+	}
+ out:
+	free(file);
 	sshkey_free(pub);
-
 	return r;
 }
 
@@ -408,7 +361,8 @@ sshkey_load_cert(const char *filename, struct sshkey **keyp)
 	char *file = NULL;
 	int r = SSH_ERR_INTERNAL_ERROR;
 
-	*keyp = NULL;
+	if (keyp != NULL)
+		*keyp = NULL;
 
 	if (asprintf(&file, "%s-cert.pub", filename) == -1)
 		return SSH_ERR_ALLOC_FAIL;
@@ -418,11 +372,12 @@ sshkey_load_cert(const char *filename, struct sshkey **keyp)
 	}
 	if ((r = sshkey_try_load_public(pub, file, NULL)) != 0)
 		goto out;
-
-	*keyp = pub;
-	pub = NULL;
+	/* success */
+	if (keyp != NULL) {
+		*keyp = pub;
+		pub = NULL;
+	}
 	r = 0;
-
  out:
 	free(file);
 	sshkey_free(pub);
@@ -437,7 +392,8 @@ sshkey_load_private_cert(int type, const char *filename, const char *passphrase,
 	struct sshkey *key = NULL, *cert = NULL;
 	int r;
 
-	*keyp = NULL;
+	if (keyp != NULL)
+		*keyp = NULL;
 
 	switch (type) {
 #ifdef WITH_OPENSSL
@@ -446,6 +402,7 @@ sshkey_load_private_cert(int type, const char *filename, const char *passphrase,
 	case KEY_ECDSA:
 #endif /* WITH_OPENSSL */
 	case KEY_ED25519:
+	case KEY_XMSS:
 	case KEY_UNSPEC:
 		break;
 	default:
@@ -467,8 +424,10 @@ sshkey_load_private_cert(int type, const char *filename, const char *passphrase,
 	    (r = sshkey_cert_copy(cert, key)) != 0)
 		goto out;
 	r = 0;
-	*keyp = key;
-	key = NULL;
+	if (keyp != NULL) {
+		*keyp = key;
+		key = NULL;
+	}
  out:
 	sshkey_free(key);
 	sshkey_free(cert);

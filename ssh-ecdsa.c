@@ -1,4 +1,4 @@
-/* $OpenBSD: ssh-ecdsa.c,v 1.12 2015/12/11 04:21:12 mmcc Exp $ */
+/* $OpenBSD: ssh-ecdsa.c,v 1.14 2018/02/07 02:06:51 jsing Exp $ */
 /*
  * Copyright (c) 2000 Markus Friedl.  All rights reserved.
  * Copyright (c) 2010 Damien Miller.  All rights reserved.
@@ -101,8 +101,7 @@ ssh_ecdsa_sign(const struct sshkey *key, u_char **sigp, size_t *lenp,
 	explicit_bzero(digest, sizeof(digest));
 	sshbuf_free(b);
 	sshbuf_free(bb);
-	if (sig != NULL)
-		ECDSA_SIG_free(sig);
+	ECDSA_SIG_free(sig);
 	return ret;
 }
 
@@ -121,7 +120,8 @@ ssh_ecdsa_verify(const struct sshkey *key,
 	char *ktype = NULL;
 
 	if (key == NULL || key->ecdsa == NULL ||
-	    sshkey_type_plain(key->type) != KEY_ECDSA)
+	    sshkey_type_plain(key->type) != KEY_ECDSA ||
+	    signature == NULL || signaturelen == 0)
 		return SSH_ERR_INVALID_ARGUMENT;
 
 	if ((hash_alg = sshkey_ec_nid_to_hash_alg(key->ecdsa_nid)) == -1 ||
@@ -179,8 +179,7 @@ ssh_ecdsa_verify(const struct sshkey *key,
 	explicit_bzero(digest, sizeof(digest));
 	sshbuf_free(sigbuf);
 	sshbuf_free(b);
-	if (sig != NULL)
-		ECDSA_SIG_free(sig);
+	ECDSA_SIG_free(sig);
 	free(ktype);
 	return ret;
 }
