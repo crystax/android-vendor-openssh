@@ -4,9 +4,8 @@ NAME
      scp M-bM-^@M-^S secure copy (remote file copy program)
 
 SYNOPSIS
-     scp [-12346BCpqrv] [-c cipher] [-F ssh_config] [-i identity_file]
-         [-l limit] [-o ssh_option] [-P port] [-S program]
-         [[user@]host1:]file1 ... [[user@]host2:]file2
+     scp [-346BCpqrv] [-c cipher] [-F ssh_config] [-i identity_file]
+         [-l limit] [-o ssh_option] [-P port] [-S program] source ... target
 
 DESCRIPTION
      scp copies files between hosts on a network.  It uses ssh(1) for data
@@ -14,17 +13,16 @@ DESCRIPTION
      as ssh(1).  scp will ask for passwords or passphrases if they are needed
      for authentication.
 
-     File names may contain a user and host specification to indicate that the
-     file is to be copied to/from that host.  Local file names can be made
-     explicit using absolute or relative pathnames to avoid scp treating file
-     names containing M-bM-^@M-^X:M-bM-^@M-^Y as host specifiers.  Copies between two remote hosts
-     are also permitted.
+     The source and target may be specified as a local pathname, a remote host
+     with optional path in the form [user@]host:[path], or a URI in the form
+     scp://[user@]host[:port][/path].  Local file names can be made explicit
+     using absolute or relative pathnames to avoid scp treating file names
+     containing M-bM-^@M-^X:M-bM-^@M-^Y as host specifiers.
+
+     When copying between two remote hosts, if the URI format is used, a port
+     may only be specified on the target if the -3 option is used.
 
      The options are as follows:
-
-     -1      Forces scp to use protocol 1.
-
-     -2      Forces scp to use protocol 2.
 
      -3      Copies between two remote hosts are transferred through the local
              host.  Without this option the data is copied directly between
@@ -67,6 +65,7 @@ DESCRIPTION
                    AddressFamily
                    BatchMode
                    BindAddress
+                   BindInterface
                    CanonicalDomains
                    CanonicalizeFallbackLocal
                    CanonicalizeHostname
@@ -75,10 +74,8 @@ DESCRIPTION
                    CertificateFile
                    ChallengeResponseAuthentication
                    CheckHostIP
-                   Cipher
                    Ciphers
                    Compression
-                   CompressionLevel
                    ConnectionAttempts
                    ConnectTimeout
                    ControlMaster
@@ -94,8 +91,9 @@ DESCRIPTION
                    HostKeyAlgorithms
                    HostKeyAlias
                    HostName
-                   IdentityFile
                    IdentitiesOnly
+                   IdentityAgent
+                   IdentityFile
                    IPQoS
                    KbdInteractiveAuthentication
                    KbdInteractiveDevices
@@ -108,13 +106,11 @@ DESCRIPTION
                    PKCS11Provider
                    Port
                    PreferredAuthentications
-                   Protocol
                    ProxyCommand
+                   ProxyJump
                    PubkeyAcceptedKeyTypes
                    PubkeyAuthentication
                    RekeyLimit
-                   RhostsRSAAuthentication
-                   RSAAuthentication
                    SendEnv
                    ServerAliveInterval
                    ServerAliveCountMax
@@ -163,4 +159,4 @@ AUTHORS
      Timo Rinne <tri@iki.fi>
      Tatu Ylonen <ylo@cs.hut.fi>
 
-OpenBSD 5.9                   September 25, 2015                   OpenBSD 5.9
+OpenBSD 6.2                    February 23, 2018                   OpenBSD 6.2

@@ -32,6 +32,7 @@
 #include "hostfile.h"
 #include "auth.h"
 #include "ssh.h"
+#include "ssh_api.h"
 #include "log.h"
 
 #ifdef _AIX
@@ -171,15 +172,16 @@ aix_valid_authentications(const char *user)
  * returns 0.
  */
 int
-sys_auth_passwd(Authctxt *ctxt, const char *password)
+sys_auth_passwd(struct ssh *ssh, const char *password)
 {
+	Authctxt *ctxt = ssh->authctxt;
 	char *authmsg = NULL, *msg = NULL, *name = ctxt->pw->pw_name;
 	int authsuccess = 0, expired, reenter, result;
 
 	do {
 		result = authenticate((char *)name, (char *)password, &reenter,
 		    &authmsg);
-		aix_remove_embedded_newlines(authmsg);	
+		aix_remove_embedded_newlines(authmsg);
 		debug3("AIX/authenticate result %d, authmsg %.100s", result,
 		    authmsg);
 	} while (reenter);
@@ -337,11 +339,11 @@ aix_setauthdb(const char *user)
 		debug3("%s: Could not open userdb to read", __func__);
 		return;
 	}
-	
+
 	if (getuserattr((char *)user, S_REGISTRY, &registry, SEC_CHAR) == 0) {
 		if (setauthdb(registry, old_registry) == 0)
 			debug3("AIX/setauthdb set registry '%s'", registry);
-		else 
+		else
 			debug3("AIX/setauthdb set registry '%s' failed: %s",
 			    registry, strerror(errno));
 	} else

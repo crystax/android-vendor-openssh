@@ -1,4 +1,4 @@
-/*	$OpenBSD: sshbuf-getput-basic.c,v 1.5 2015/10/20 23:24:25 mmcc Exp $	*/
+/*	$OpenBSD: sshbuf-getput-basic.c,v 1.7 2017/06/01 04:51:58 djm Exp $	*/
 /*
  * Copyright (c) 2011 Damien Miller
  *
@@ -19,6 +19,8 @@
 #include "includes.h"
 
 #include <sys/types.h>
+
+#include <stdarg.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -268,7 +270,7 @@ sshbuf_putfv(struct sshbuf *buf, const char *fmt, va_list ap)
 	int r, len;
 	u_char *p;
 
-	va_copy(ap2, ap);
+	VA_COPY(ap2, ap);
 	if ((len = vsnprintf(NULL, 0, fmt, ap2)) < 0) {
 		r = SSH_ERR_INVALID_ARGUMENT;
 		goto out;
@@ -278,7 +280,7 @@ sshbuf_putfv(struct sshbuf *buf, const char *fmt, va_list ap)
 		goto out; /* Nothing to do */
 	}
 	va_end(ap2);
-	va_copy(ap2, ap);
+	VA_COPY(ap2, ap);
 	if ((r = sshbuf_reserve(buf, (size_t)len + 1, &p)) < 0)
 		goto out;
 	if ((r = vsnprintf((char *)p, len + 1, fmt, ap2)) != len) {
@@ -363,7 +365,7 @@ sshbuf_put_string(struct sshbuf *buf, const void *v, size_t len)
 int
 sshbuf_put_cstring(struct sshbuf *buf, const char *v)
 {
-	return sshbuf_put_string(buf, (u_char *)v, v == NULL ? 0 : strlen(v));
+	return sshbuf_put_string(buf, v, v == NULL ? 0 : strlen(v));
 }
 
 int

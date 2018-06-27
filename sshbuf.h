@@ -1,4 +1,4 @@
-/*	$OpenBSD: sshbuf.h,v 1.6 2015/12/10 07:01:35 mmcc Exp $	*/
+/*	$OpenBSD: sshbuf.h,v 1.9 2017/09/12 06:32:07 djm Exp $	*/
 /*
  * Copyright (c) 2011 Damien Miller
  *
@@ -139,6 +139,14 @@ u_char *sshbuf_mutable_ptr(const struct sshbuf *buf);
 int	sshbuf_check_reserve(const struct sshbuf *buf, size_t len);
 
 /*
+ * Preallocates len additional bytes in buf.
+ * Useful for cases where the caller knows how many bytes will ultimately be
+ * required to avoid realloc in the buffer code.
+ * Returns 0 on success, or a negative SSH_ERR_* error code on failure.
+ */
+int	sshbuf_allocate(struct sshbuf *buf, size_t len);
+
+/*
  * Reserve len bytes in buf.
  * Returns 0 on success and a pointer to the first reserved byte via the
  * optional dpp parameter or a negative * SSH_ERR_* error code on failure.
@@ -203,6 +211,7 @@ int	sshbuf_get_string_direct(struct sshbuf *buf, const u_char **valp,
 /* Another variant: "peeks" into the buffer without modifying it */
 int	sshbuf_peek_string_direct(const struct sshbuf *buf, const u_char **valp,
 	    size_t *lenp);
+/* XXX peek_u8 / peek_u32 */
 
 /*
  * Functions to extract or store SSH wire encoded bignums and elliptic
@@ -238,6 +247,13 @@ char	*sshbuf_dtob64(struct sshbuf *buf);
 
 /* Decode base64 data and append it to the buffer */
 int	sshbuf_b64tod(struct sshbuf *buf, const char *b64);
+
+/*
+ * Duplicate the contents of a buffer to a string (caller to free).
+ * Returns NULL on buffer error, or if the buffer contains a premature
+ * nul character.
+ */
+char *sshbuf_dup_string(struct sshbuf *buf);
 
 /* Macros for decoding/encoding integers */
 #define PEEK_U64(p) \
